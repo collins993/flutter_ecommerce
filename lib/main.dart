@@ -15,16 +15,27 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         fontFamily: GoogleFonts.signika().fontFamily,
       ),
-      home: Scaffold(
-        backgroundColor: Colors.blueGrey,
-        body: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Center(
-            child: Text(
-              "My E-Commerce app, lets see how its going to go down.",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
+      home: SplashScreen(),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+
+class _SplashScreenState extends State<SplashScreen>
+{
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: Center(
+        child: Text(
+            "Welcome to Flutter Firetore eCommerce Course by Code Locks.",
+          style: TextStyle(color: Colors.green, fontSize: 20.0),
+          textAlign: TextAlign.center,
         ),
       ),
     );
