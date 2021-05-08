@@ -5,7 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ecommerce/Configs/config.dart';
+import 'package:flutter_ecommerce/Provider/firebase_auth_services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Authentication/authentication.dart';
@@ -23,14 +25,19 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'E-Commerce',
-      theme: ThemeData(
-        fontFamily: GoogleFonts.signika().fontFamily,
-        scaffoldBackgroundColor: Colors.white,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<FirebaseAuthServices>(create: (_) => FirebaseAuthServices(),),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'E-Commerce',
+        theme: ThemeData(
+          fontFamily: GoogleFonts.signika().fontFamily,
+          scaffoldBackgroundColor: Colors.white,
+        ),
+        home: SplashScreen(),
       ),
-      home: SplashScreen(),
     );
   }
 }

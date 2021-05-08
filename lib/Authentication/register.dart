@@ -1,13 +1,20 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ecommerce/Configs/config.dart';
 import 'package:flutter_ecommerce/DialogBox/errorDialog.dart';
 import 'package:flutter_ecommerce/DialogBox/loadingDialog.dart';
+import 'package:flutter_ecommerce/Profile/profile_page.dart';
+import 'package:flutter_ecommerce/Provider/firebase_auth_services.dart';
 import 'package:flutter_ecommerce/Store/store_home.dart';
 import 'package:flutter_ecommerce/Widgets/custom_textfields.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:path/path.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -20,209 +27,179 @@ class _RegisterState extends State<Register> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _repeatPasswordController =
       TextEditingController();
-  final GlobalKey _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   String userImageUrl = "";
-  dynamic _imageFile;
+  File _imageFile;
 
   @override
   Widget build(BuildContext context) {
+    final registerProvider = Provider.of<FirebaseAuthServices>(context);
     double _screenWidth = MediaQuery.of(context).size.width,
         _screenHeight = MediaQuery.of(context).size.height;
+
+    Future<void> _registerUser(BuildContext context) async {
+      try {
+        await registerProvider.register(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+      } catch (e) {
+        print(e.toString());
+        return;
+      }
+    }
+
     return Scaffold(
-        body: SingleChildScrollView(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            SizedBox(
-              height: 8.0,
-            ),
-            InkWell(
-              onTap: () => _selectAndPickImage,
-              child: CircleAvatar(
-                radius: _screenWidth / 5,
-                backgroundColor: Colors.grey[400],
-                backgroundImage:
-                    _imageFile == null ? null : FileImage(_imageFile),
-                child: _imageFile == null
-                    ? Icon(
-                        Icons.add_a_photo,
-                        color: Colors.white,
-                        size: _screenWidth / 5,
-                      )
-                    : null,
+      body: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              SizedBox(
+                height: 8.0,
               ),
-            ),
-            SizedBox(
-              height: 8.0,
-            ),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  CustomTextField(
-                    controller: _nameController,
-                    hintText: "enter username",
-                    leading: Icons.person,
-                    isObsecure: false,
-                  ),
-                  CustomTextField(
-                    controller: _emailController,
-                    hintText: "enter email address",
-                    leading: Icons.email,
-                    isObsecure: false,
-                  ),
-                  CustomTextField(
-                    controller: _passwordController,
-                    hintText: "enter password",
-                    leading: Icons.lock,
-                    isObsecure: true,
-                  ),
-                  CustomTextField(
-                    controller: _repeatPasswordController,
-                    hintText: "re-enter password",
-                    leading: Icons.lock,
-                    isObsecure: true,
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    height: 50,
-                    padding: EdgeInsets.only(left: 8, right: 8, top: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () {
-                        uploadAndSaveImage();
-                      },
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 20,
+                      ),
                       child: Text(
-                        "Sign up",
+                        "Welcome",
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold),
+                          fontSize: 30,
+                          fontFamily: GoogleFonts.lobster().fontFamily,
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 30,
-                  ),
-                  Container(
-                    height: 2.0,
-                    width: _screenWidth / 1.3,
-                    color: Colors.black,
-                  ),
-                  SizedBox(
-                    height: 15.0,
-                  ),
-                ],
+                    SizedBox(
+                      height: 28.0,
+                    ),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          selectFile();
+                        },
+                        child: Container(
+                          height: 150,
+                          width: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey,
+                          ),
+                          child: Icon(
+                            Icons.image,
+                            size: 100,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    CustomTextField(
+                      validator: (val) =>
+                          val.isNotEmpty ? null : "Please enter username",
+                      controller: _nameController,
+                      hintText: "enter username",
+                      leading: Icons.person,
+                      isObsecure: false,
+                    ),
+                    CustomTextField(
+                      validator: (val) => val.isNotEmpty
+                          ? null
+                          : "Please enter an email address",
+                      controller: _emailController,
+                      hintText: "enter email address",
+                      leading: Icons.email,
+                      isObsecure: false,
+                    ),
+                    CustomTextField(
+                      validator: (val) =>
+                          val.length < 6 ? null : "Please enter more than 6",
+                      controller: _passwordController,
+                      hintText: "enter password",
+                      leading: Icons.lock,
+                      isObsecure: true,
+                    ),
+                    CustomTextField(
+                      validator: (val) =>
+                          val.length < 6 ? null : "Please enter more than 6",
+                      controller: _repeatPasswordController,
+                      hintText: "re-enter password",
+                      leading: Icons.lock,
+                      isObsecure: true,
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    MaterialButton(
+                      onPressed: () async {
+                        if (_formKey.currentState.validate()) {
+                          await registerProvider.register(
+                            _emailController.text.trim(),
+                            _passwordController.text.trim(),
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfilePage(
+                                username:
+                                    _nameController.text.toString().trim(),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      height: 50,
+                      color: Colors.black,
+                      minWidth:
+                          registerProvider.isLoading ? null : double.infinity,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: registerProvider.isLoading
+                          ? CircularProgressIndicator(
+                              valueColor: new AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            )
+                          : Text(
+                              "Register",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                    SizedBox(
+                      height: 30,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 
-  Future<void> _selectAndPickImage() async {
-    _imageFile = await ImagePicker().getImage(source: ImageSource.gallery);
-  }
+  Future<void> selectFile() async {
+    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
 
-  Future<void> uploadAndSaveImage() async {
-    if (_imageFile == null) {
-      showDialog(
-          context: context,
-          builder: (c) {
-            return ErrorAlertDialog(message: "Please select an image file.");
-          });
-    } else {
-      _passwordController.text == _repeatPasswordController.text
-          ? _emailController.text.isNotEmpty &&
-                  _passwordController.text.isNotEmpty &&
-                  _repeatPasswordController.text.isNotEmpty &&
-                  _nameController.text.isNotEmpty
-              ? uploadToStorage()
-              : displayDialog("Please fill out all field correctly")
-          : displayDialog("Password do not match");
+    if(result != null){
+      final path = result.files.single.path;
+      _imageFile = File(path);
     }
   }
 
-  displayDialog(String msg) {
-    showDialog(
-        context: context,
-        builder: (c) {
-          return ErrorAlertDialog(
-            message: msg,
-          );
-        });
-  }
-
-  uploadToStorage() async {
-    showDialog(
-        context: context,
-        builder: (c) {
-          return LoadingAlertDialog();
-        });
-
-    String imageFileName = DateTime.now().millisecondsSinceEpoch.toString();
-    Reference reference = FirebaseStorage.instance.ref().child(imageFileName);
-    UploadTask storageUploadTask = reference.putFile(_imageFile);
-    TaskSnapshot taskSnapshot =
-        await storageUploadTask.whenComplete(() => null);
-    await taskSnapshot.ref.getDownloadURL().then((urlImage) {
-      userImageUrl = urlImage;
-
-      _registerUser();
-    });
-  }
-
-  FirebaseAuth _auth = FirebaseAuth.instance;
-  void _registerUser() async {
-    User userCredential;
-
-    await FirebaseAuth.instance
-        .signInWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim())
-        .then((auth) {
-      userCredential = auth.user;
-    }).catchError((e) {
-      Navigator.pop(context);
-      showDialog(
-          context: context,
-          builder: (c) {
-            return ErrorAlertDialog(
-              message: e.toString(),
-            );
-          });
-    });
-
-    if(userCredential != null){
-      saveUserInfoToFireStore(userCredential).then((value) {
-        Navigator.pop(context);
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (c)=> StoreHome()));
-      });
+  Future uploadFile() async {
+    if(_imageFile == null){
+      return;
     }
   }
-
-  Future saveUserInfoToFireStore(User userCredential) async {
-    FirebaseFirestore.instance.collection('User').doc(userCredential.uid).set({
-      'uid' : userCredential.uid,
-      'email' : userCredential.email,
-      'name' : _nameController.text.trim(),
-      'url' : userImageUrl,
-    });
-
-    await EcommerceApp.sharedPreferences.setString('uid', userCredential.uid);
-    await EcommerceApp.sharedPreferences.setString(EcommerceApp.userEmail, userCredential.uid);
-    await EcommerceApp.sharedPreferences.setString(EcommerceApp.userName, _nameController.text.trim());
-    await EcommerceApp.sharedPreferences.setString(EcommerceApp.userAvatarUrl, userImageUrl);
-    await EcommerceApp.sharedPreferences.setStringList(EcommerceApp.userCartList, ["garbageValue"]);
-  }
-
 }

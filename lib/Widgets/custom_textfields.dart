@@ -5,9 +5,10 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final IconData leading;
   final String hintText;
+  final Function validator;
   bool isObsecure = true;
 
-  CustomTextField({Key key, this.controller, this.leading, this.hintText, this.isObsecure})
+  CustomTextField({Key key, this.controller, this.leading, this.hintText, this.isObsecure, this.validator})
       : super(key: key);
 
   @override
@@ -24,6 +25,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       ),
       padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
       child: TextFormField(
+        validator: widget.validator,
         controller: widget.controller,
         obscureText: widget.isObsecure,
         cursorColor: Colors.black,
